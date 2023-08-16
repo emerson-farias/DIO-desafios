@@ -86,52 +86,11 @@ ERRO_JA_EXISTE_USUARIO = "ERRO: Já existe um usuário com este CPF."
 ERRO_OPERACAO_INVALIDA = "ERRO: Operação inválida, por favor selecione novamente a operação desejada."
 MSG_USUARIO_CRIADO = "Usuário criado com sucesso."
 
-def excedeu_quantidade_saques(numero_saques):
-    if numero_saques >= LIMITE_QUANTIDADE_SAQUES:
-        print(f"ERRO: Quantidade limite de saques diários excedido ({LIMITE_QUANTIDADE_SAQUES}). Favor tentar no próximo dia.")
-        return True
-    return False
-
-# A função saque deve receber os argumentos apenas por nome (keyword only).
-def sacar(*, valor, saldo, numero_saques):
-    if valor <= 0:
-        print("ERRO: Valor a sacar inválido. Favor informar valor positivo.")
-        return saldo, numero_saques, ""
-    
-    excedeu_valor_saque = valor > LIMITE_VALOR_SAQUE
-    if excedeu_valor_saque:
-        print(f"ERRO: Valor maior que limite de saque permitido ({MOEDA} {LIMITE_VALOR_SAQUE:.2f}).")
-        return saldo, numero_saques, ""
-    
-    saldo_insuficiente = valor > saldo
-    if saldo_insuficiente:
-        print("ERRO: Saldo insuficiente.")
-        return saldo, numero_saques, ""
-    
-    saldo -= valor
-    numero_saques += 1
-    operacao = "Saque"
-    linha_extrato = f"\n{operacao:<8} - {MOEDA} {valor:>10.2f} D"
-    return saldo, numero_saques, linha_extrato
-
-# A função depósito deve receber os argumentos apenas por posição (positional only).
-def depositar(valor, saldo):
-    if valor <= 0:
-        print("ERRO: Valor a depositar inválido. Favor informar valor positivo.")
-        return saldo, ""
-    
-    saldo += valor
-    operacao = "Depósito"
-    linha_extrato = f"\n{operacao:<8} - {MOEDA} {valor:>10.2f} C"
-    return saldo, linha_extrato
-
-# A função extrato deve receber os argumentos por posição e nome (positional only
-# e keyword only). Argumentos nomeados: extrato.
-def visualizar_extrato(saldo, *, extrato):
-    print(f"\n{BARRA_EXTRATO}", end="")
-    print(extrato if len(extrato) > 0 else "\nNão há lançamentos.")
-    print(f"{BARRA_SEPARADORA_SALDO}")
-    print("{:<8} - {} {:>10.2f}".format("Saldo", MOEDA, saldo))
+# ##############################################################################
+# ▒█░▒█ █▀▀ █░░█ █▀▀█ █▀▀█ ░▀░ █▀▀█ █▀▀ 
+# ▒█░▒█ ▀▀█ █░░█ █▄▄█ █▄▄▀ ▀█▀ █░░█ ▀▀█ 
+# ░▀▄▄▀ ▀▀▀ ░▀▀▀ ▀░░▀ ▀░▀▀ ▀▀▀ ▀▀▀▀ ▀▀▀ 
+# ##############################################################################
 
 def buscar_usuario(usuarios, *, cpf):
     for usuario in usuarios:
@@ -210,6 +169,12 @@ def administrar_usuarios(usuarios):
         else:
             print(ERRO_OPERACAO_INVALIDA)
 
+# ##############################################################################
+# ▒█▀▀█ █▀▀█ █▀▀▄ ▀▀█▀▀ █▀▀█ █▀▀ 
+# ▒█░░░ █░░█ █░░█ ░░█░░ █▄▄█ ▀▀█ 
+# ▒█▄▄█ ▀▀▀▀ ▀░░▀ ░░▀░░ ▀░░▀ ▀▀▀ 
+# ##############################################################################
+
 def administrar_contas():
     menu = """
     ======== MENU CONTAS ==========
@@ -234,6 +199,59 @@ def administrar_contas():
 
         else:
             print(ERRO_OPERACAO_INVALIDA)
+
+# ##############################################################################
+# ▒█▀▀█ █▀▀█ █▀▀▄ ▀▀█▀▀ █▀▀█ ░░ ▒█▀▀█ █▀▀█ █▀▀█ █▀▀█ █▀▀ █▀▀▄ ▀▀█▀▀ █▀▀ 
+# ▒█░░░ █░░█ █░░█ ░░█░░ █▄▄█ ▀▀ ▒█░░░ █░░█ █▄▄▀ █▄▄▀ █▀▀ █░░█ ░░█░░ █▀▀ 
+# ▒█▄▄█ ▀▀▀▀ ▀░░▀ ░░▀░░ ▀░░▀ ░░ ▒█▄▄█ ▀▀▀▀ ▀░▀▀ ▀░▀▀ ▀▀▀ ▀░░▀ ░░▀░░ ▀▀▀
+# ##############################################################################
+
+def excedeu_quantidade_saques(numero_saques):
+    if numero_saques >= LIMITE_QUANTIDADE_SAQUES:
+        print(f"ERRO: Quantidade limite de saques diários excedido ({LIMITE_QUANTIDADE_SAQUES}). Favor tentar no próximo dia.")
+        return True
+    return False
+
+# A função saque deve receber os argumentos apenas por nome (keyword only).
+def sacar(*, valor, saldo, numero_saques):
+    if valor <= 0:
+        print("ERRO: Valor a sacar inválido. Favor informar valor positivo.")
+        return saldo, numero_saques, ""
+    
+    excedeu_valor_saque = valor > LIMITE_VALOR_SAQUE
+    if excedeu_valor_saque:
+        print(f"ERRO: Valor maior que limite de saque permitido ({MOEDA} {LIMITE_VALOR_SAQUE:.2f}).")
+        return saldo, numero_saques, ""
+    
+    saldo_insuficiente = valor > saldo
+    if saldo_insuficiente:
+        print("ERRO: Saldo insuficiente.")
+        return saldo, numero_saques, ""
+    
+    saldo -= valor
+    numero_saques += 1
+    operacao = "Saque"
+    linha_extrato = f"\n{operacao:<8} - {MOEDA} {valor:>10.2f} D"
+    return saldo, numero_saques, linha_extrato
+
+# A função depósito deve receber os argumentos apenas por posição (positional only).
+def depositar(valor, saldo):
+    if valor <= 0:
+        print("ERRO: Valor a depositar inválido. Favor informar valor positivo.")
+        return saldo, ""
+    
+    saldo += valor
+    operacao = "Depósito"
+    linha_extrato = f"\n{operacao:<8} - {MOEDA} {valor:>10.2f} C"
+    return saldo, linha_extrato
+
+# A função extrato deve receber os argumentos por posição e nome (positional only
+# e keyword only). Argumentos nomeados: extrato.
+def visualizar_extrato(saldo, *, extrato):
+    print(f"\n{BARRA_EXTRATO}", end="")
+    print(extrato if len(extrato) > 0 else "\nNão há lançamentos.")
+    print(f"{BARRA_SEPARADORA_SALDO}")
+    print("{:<8} - {} {:>10.2f}".format("Saldo", MOEDA, saldo))
 
 def acessar_conta():
     menu = """
@@ -274,6 +292,12 @@ def acessar_conta():
 
         else:
             print(ERRO_OPERACAO_INVALIDA)
+
+# ##############################################################################
+# ▒█▀▄▀█ █▀▀█ ░▀░ █▀▀▄ 
+# ▒█▒█▒█ █▄▄█ ▀█▀ █░░█ 
+# ▒█░░▒█ ▀░░▀ ▀▀▀ ▀░░▀
+# ##############################################################################
 
 def main():
     menu = """

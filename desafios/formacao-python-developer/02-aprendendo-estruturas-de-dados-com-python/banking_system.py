@@ -73,6 +73,7 @@ Tip
 To link a user to an account, filter the user list by looking for the SSN number
 reported for each user in the list.
 """
+
 import textwrap
 
 BRANCH = "0001"
@@ -86,53 +87,11 @@ ERROR_USER_ALREADY_EXISTS = "ERROR: A user with this SSN already exists."
 ERROR_INVALID_OPERATION = "ERROR: Invalid operation, please select the desired operation again."
 MSG_USER_CREATED = "User created successfully."
 
-def exceeded_withdrawal_count(number_of_withdrawals):
-    if number_of_withdrawals >= WITHDRAWAL_LIMIT_COUNT:
-        print(f"ERROR: Daily withdrawal limit exceeded ({WITHDRAWAL_LIMIT_COUNT}). Please try again tomorrow.")
-        return True
-    return False
-
-# The withdrawal function should receive arguments only by name (keyword only).
-def withdraw(*, amount, balance, number_of_withdrawals):
-    if amount <= 0:
-        print("ERROR: Invalid withdrawal amount. Please enter a positive value.")
-        return balance, number_of_withdrawals, ""
-    
-    exceeded_withdrawal_amount = amount > WITHDRAWAL_LIMIT_AMOUNT
-    if exceeded_withdrawal_amount:
-        print(f"ERROR: Amount exceeds allowed withdrawal limit ({WITHDRAWAL_LIMIT_AMOUNT:.2f} {CURRENCY}).")
-        return balance, number_of_withdrawals, ""
-
-    insufficient_balance = amount > balance
-    if insufficient_balance:
-        print("ERROR: Insufficient balance.")
-        return balance, number_of_withdrawals, ""
-
-    balance -= amount
-    number_of_withdrawals += 1
-    formatted_amount = f"{amount:>10.2f}"
-    formatted_amount = f"{' ' * (9 - len(formatted_amount.strip()))}-" + formatted_amount.strip()
-    operation = "Withdraw"
-    statement_line = f"\n{operation:<11} - {formatted_amount} {CURRENCY}"
-    return balance, number_of_withdrawals, statement_line
-
-# The deposit function should receive arguments only by position (positional only).
-def deposit(amount, balance):
-    if amount <= 0:
-        print("ERROR: Invalid deposit amount. Please enter a positive value.")
-        return balance, ""
-    balance += amount
-    operation = "Deposit"
-    statement_line = f"\n{operation:<11} - {amount:>10.2f} {CURRENCY}"
-    return balance, statement_line
-
-# The statement function must receive arguments by position and name (positional
-# only and keyword only). Named arguments: statement.
-def view_statement(balance, *, statement):
-    print(f"\n{STATEMENT_HEADER}", end="")
-    print(statement if len(statement) > 0 else "\nNo transactions.")
-    print(f"{SEPARATOR_LINE_BALANCE}")
-    print("{:<11} - {:>10.2f} {}".format("Net Balance", balance, CURRENCY))
+# ##############################################################################
+# ▒█░▒█ █▀▀ █▀▀ █▀▀█ █▀▀ 
+# ▒█░▒█ ▀▀█ █▀▀ █▄▄▀ ▀▀█ 
+# ░▀▄▄▀ ▀▀▀ ▀▀▀ ▀░▀▀ ▀▀▀
+# ##############################################################################
 
 def search_user(users, *, ssn):
     for user in users:
@@ -211,6 +170,12 @@ def manage_users(users):
         else:
             print(ERROR_INVALID_OPERATION)
 
+# ##############################################################################
+# ░█▀▀█ █▀▀ █▀▀ █▀▀█ █░░█ █▀▀▄ ▀▀█▀▀ █▀▀ 
+# ▒█▄▄█ █░░ █░░ █░░█ █░░█ █░░█ ░░█░░ ▀▀█ 
+# ▒█░▒█ ▀▀▀ ▀▀▀ ▀▀▀▀ ░▀▀▀ ▀░░▀ ░░▀░░ ▀▀▀
+# ##############################################################################
+
 def manage_accounts():
     menu = """
     ======= ACCOUNTS MENU =======
@@ -235,6 +200,60 @@ def manage_accounts():
 
         else:
             print(ERROR_INVALID_OPERATION)
+
+# ##############################################################################
+# ▒█▀▀█ █░░█ █▀▀ █▀▀ █░█ ░▀░ █▀▀▄ █▀▀▀ 　 ░█▀▀█ █▀▀ █▀▀ █▀▀█ █░░█ █▀▀▄ ▀▀█▀▀ 
+# ▒█░░░ █▀▀█ █▀▀ █░░ █▀▄ ▀█▀ █░░█ █░▀█ 　 ▒█▄▄█ █░░ █░░ █░░█ █░░█ █░░█ ░░█░░ 
+# ▒█▄▄█ ▀░░▀ ▀▀▀ ▀▀▀ ▀░▀ ▀▀▀ ▀░░▀ ▀▀▀▀ 　 ▒█░▒█ ▀▀▀ ▀▀▀ ▀▀▀▀ ░▀▀▀ ▀░░▀ ░░▀░░
+# ##############################################################################
+
+def exceeded_withdrawal_count(number_of_withdrawals):
+    if number_of_withdrawals >= WITHDRAWAL_LIMIT_COUNT:
+        print(f"ERROR: Daily withdrawal limit exceeded ({WITHDRAWAL_LIMIT_COUNT}). Please try again tomorrow.")
+        return True
+    return False
+
+# The withdrawal function should receive arguments only by name (keyword only).
+def withdraw(*, amount, balance, number_of_withdrawals):
+    if amount <= 0:
+        print("ERROR: Invalid withdrawal amount. Please enter a positive value.")
+        return balance, number_of_withdrawals, ""
+    
+    exceeded_withdrawal_amount = amount > WITHDRAWAL_LIMIT_AMOUNT
+    if exceeded_withdrawal_amount:
+        print(f"ERROR: Amount exceeds allowed withdrawal limit ({WITHDRAWAL_LIMIT_AMOUNT:.2f} {CURRENCY}).")
+        return balance, number_of_withdrawals, ""
+
+    insufficient_balance = amount > balance
+    if insufficient_balance:
+        print("ERROR: Insufficient balance.")
+        return balance, number_of_withdrawals, ""
+
+    balance -= amount
+    number_of_withdrawals += 1
+    formatted_amount = f"{amount:>10.2f}"
+    formatted_amount = f"{' ' * (9 - len(formatted_amount.strip()))}-" + formatted_amount.strip()
+    operation = "Withdraw"
+    statement_line = f"\n{operation:<11} - {formatted_amount} {CURRENCY}"
+    return balance, number_of_withdrawals, statement_line
+
+# The deposit function should receive arguments only by position (positional only).
+def deposit(amount, balance):
+    if amount <= 0:
+        print("ERROR: Invalid deposit amount. Please enter a positive value.")
+        return balance, ""
+    balance += amount
+    operation = "Deposit"
+    statement_line = f"\n{operation:<11} - {amount:>10.2f} {CURRENCY}"
+    return balance, statement_line
+
+# The statement function must receive arguments by position and name (positional
+# only and keyword only). Named arguments: statement.
+def view_statement(balance, *, statement):
+    print(f"\n{STATEMENT_HEADER}", end="")
+    print(statement if len(statement) > 0 else "\nNo transactions.")
+    print(f"{SEPARATOR_LINE_BALANCE}")
+    print("{:<11} - {:>10.2f} {}".format("Net Balance", balance, CURRENCY))
 
 def access_account():
     menu = """
@@ -275,6 +294,12 @@ def access_account():
 
         else:
             print(ERROR_INVALID_OPERATION)
+
+# ##############################################################################
+# ▒█▀▄▀█ █▀▀█ ░▀░ █▀▀▄ 
+# ▒█▒█▒█ █▄▄█ ▀█▀ █░░█ 
+# ▒█░░▒█ ▀░░▀ ▀▀▀ ▀░░▀
+# ##############################################################################
 
 def main():
     menu = """
