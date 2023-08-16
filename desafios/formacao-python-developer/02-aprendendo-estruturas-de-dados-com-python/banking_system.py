@@ -55,9 +55,9 @@ Create User (Client)
 
 The program should store users in a list, a user is composed of: name, date of
 birth, SSN (Social Security Number), and address. The address is a string in the
-format: street, number - neighborhood - city/state abbreviation. Only the
-numbers of the SSN should be stored. We cannot register 2 users with the same
-SSN.
+format: street number and name, apt/suite (if appl.) - city, state abbreviation.
+Only the numbers of the SSN should be stored. We cannot register 2 users with
+the same SSN.
 
 Create Checking Account
 The program should store accounts in a list, an account consists of: agency,
@@ -69,13 +69,17 @@ Tip
 To link a user to an account, filter the user list by looking for the SSN 
 number reported for each user in the list.
 """
+import textwrap
 
 CURRENCY = "USD"
 WITHDRAWAL_LIMIT_AMOUNT = 500
 WITHDRAWAL_LIMIT_COUNT = 3
-STATEMENT_WIDTH = 28
+STATEMENT_WIDTH = 29
 STATEMENT_HEADER = "Statement".center(STATEMENT_WIDTH, "=")
 SEPARATOR_LINE_BALANCE = "-" * STATEMENT_WIDTH
+ERROR_USER_ALREADY_EXISTS = "ERROR: A user with this SSN already exists."
+ERROR_INVALID_OPERATION = "ERROR: Invalid operation, please select the desired operation again."
+MSG_USER_CREATED = "User created successfully."
 
 def exceeded_withdrawal_count(number_of_withdrawals):
     if number_of_withdrawals >= WITHDRAWAL_LIMIT_COUNT:
@@ -120,14 +124,116 @@ def deposit(amount, balance):
 # The statement function must receive arguments by position and name (positional
 # only and keyword only). Named arguments: statement.
 def view_statement(balance, *, statement):
-    print(f"\n\n{STATEMENT_HEADER}", end="")
+    print(f"\n{STATEMENT_HEADER}", end="")
     print(statement if len(statement) > 0 else "\nNo transactions.")
     print(f"{SEPARATOR_LINE_BALANCE}")
     print("{:<11} - {:>10.2f} {}".format("Net Balance", balance, CURRENCY))
 
-def main():
-    menu = """
+def search_user(users, *, ssn):
+    for user in users:
+        if user['ssn'] == ssn:
+            return user
+    return None
 
+def create_user(users, *, ssn, name, birth_date, address):
+    if search_user(users, ssn=ssn):
+        raise ValueError(ERROR_USER_ALREADY_EXISTS)
+
+    new_user = {
+        'ssn': ssn,
+        'name': name,
+        'birth_date': birth_date,
+        'address': address
+    }
+    users.append(new_user)
+    return new_user
+
+def create_user_ui(users):
+    ssn = input("\nEnter the SSN (numbers only)\n=> ")
+
+    if search_user(users, ssn=ssn):
+        print(ERROR_USER_ALREADY_EXISTS)
+        return
+
+    name = input("\nEnter the full name\n=> ")
+    birth_date = input("\nEnter the birth date (mm/dd/aaaa)\n=> ")
+    address = input("\nEnter the address (street number and name, apt/suite [if appl.] - city, state abbreviation)\n=> ")
+    user = create_user(users, ssn=ssn, name=name, birth_date=birth_date, address=address)
+    print("\n" + MSG_USER_CREATED)
+
+def list_users(users):
+    if len(users) == 0:
+        print("\nNo users.")
+        return
+
+    user_statements = []
+    max_width = 0
+    for user in users:
+        user_statement = textwrap.dedent(f"""\
+            Name: {user['name']}
+            SSN: {user['ssn']}
+            Birth Date: {user['birth_date']}
+            Address: {user['address']}""")
+        user_statements.append(user_statement)
+        max_width = max(max(len(line) for line in user_statement.splitlines()), max_width)
+    print()
+    for user_statement in user_statements:
+        print("=" * max_width)
+        print(user_statement)
+
+def manage_users(users):
+    menu = """
+    ======== USERS MENU =========
+    [c] Create users
+    [l] List users
+    [q] Quit
+
+    => """
+
+    while True:
+
+        option = input(textwrap.dedent(menu))
+
+        if option == "c":
+            create_user_ui(users)
+
+        elif option == "l":
+            list_users(users)
+
+        elif option == "q":
+            break
+
+        else:
+            print(ERROR_INVALID_OPERATION)
+
+def manage_accounts():
+    menu = """
+    ======= ACCOUNTS MENU =======
+    [c] Create account
+    [l] List accounts
+    [q] Quit
+
+    => """
+
+    while True:
+
+        option = input(textwrap.dedent(menu))
+
+        if option == "c":
+            pass
+
+        elif option == "l":
+            pass
+
+        elif option == "q":
+            break
+
+        else:
+            print(ERROR_INVALID_OPERATION)
+
+def access_account():
+    menu = """
+    === CHECKING ACCOUNT MENU ===
     [d] Deposit
     [w] Withdraw
     [s] Statement
@@ -141,10 +247,10 @@ def main():
 
     while True:
 
-        option = input(menu)
+        option = input(textwrap.dedent(menu))
 
         if option == "d":
-            amount = float(input("\n\nEnter the amount to deposit\n=> "))
+            amount = float(input("\nEnter the amount to deposit\n=> "))
             balance, statement_line = deposit(amount, balance)
             statement += statement_line
 
@@ -152,7 +258,7 @@ def main():
             if exceeded_withdrawal_count(number_of_withdrawals):
                 continue
 
-            amount = float(input("\n\nEnter the amount to withdraw\n=> "))
+            amount = float(input("\nEnter the amount to withdraw\n=> "))
             balance, number_of_withdrawals, statement_line = withdraw(amount=amount, balance=balance, number_of_withdrawals=number_of_withdrawals)
             statement += statement_line
 
@@ -163,7 +269,38 @@ def main():
             break
 
         else:
-            print("Invalid operation, please select the desired operation again.")
+            print(ERROR_INVALID_OPERATION)
+
+def main():
+    menu = """
+    ========= MAIN MENU =========
+    [a] Access Checking Account
+    [u] Manage Users
+    [c] Manage Checking Accounts
+    [q] Quit
+
+    => """
+    users = []
+    accounts = []
+
+    while True:
+
+        option = input(textwrap.dedent(menu))
+
+        if option == "a":
+            access_account()
+
+        elif option == "u":
+            manage_users(users)
+
+        elif option == "c":
+            manage_accounts()
+
+        elif option == "q":
+            break
+
+        else:
+            print(ERROR_INVALID_OPERATION)
 
 if __name__ == '__main__':
     main()

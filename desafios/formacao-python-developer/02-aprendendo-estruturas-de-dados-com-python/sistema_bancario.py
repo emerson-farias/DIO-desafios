@@ -73,12 +73,17 @@ Para vincular um usuário a uma conta, filtre a lista de usuários buscando o
 número do CPF informado para cada usuário da lista.
 """
 
+import textwrap
+
 MOEDA = "R$"
 LIMITE_VALOR_SAQUE = 500
 LIMITE_QUANTIDADE_SAQUES = 3
-LARGURA_EXTRATO = 26
+LARGURA_EXTRATO = 31
 BARRA_EXTRATO = "Extrato".center(LARGURA_EXTRATO, "=")
 BARRA_SEPARADORA_SALDO = "-" * LARGURA_EXTRATO
+ERRO_JA_EXISTE_USUARIO = "ERRO: Já existe um usuário com este CPF."
+ERRO_OPERACAO_INVALIDA = "ERRO: Operação inválida, por favor selecione novamente a operação desejada."
+MSG_USUARIO_CRIADO = "Usuário criado com sucesso."
 
 def excedeu_quantidade_saques(numero_saques):
     if numero_saques >= LIMITE_QUANTIDADE_SAQUES:
@@ -122,14 +127,116 @@ def depositar(valor, saldo):
 # A função extrato deve receber os argumentos por posição e nome (positional only
 # e keyword only). Argumentos nomeados: extrato.
 def visualizar_extrato(saldo, *, extrato):
-    print(f"\n\n{BARRA_EXTRATO}", end="")
+    print(f"\n{BARRA_EXTRATO}", end="")
     print(extrato if len(extrato) > 0 else "\nNão há lançamentos.")
     print(f"{BARRA_SEPARADORA_SALDO}")
     print("{:<8} - {} {:>10.2f}".format("Saldo", MOEDA, saldo))
 
-def main():
-    menu = """
+def buscar_usuario(usuarios, *, cpf):
+    for usuario in usuarios:
+        if usuario['cpf'] == cpf:
+            return usuario
+    return None
 
+def criar_usuario(usuarios, *, cpf, nome, data_nascimento, endereco):
+    if buscar_usuario(usuarios, cpf=cpf):
+        raise ValueError(ERRO_JA_EXISTE_USUARIO)
+
+    novo_usuario = {
+        'cpf': cpf,
+        'nome': nome,
+        'data_nascimento': data_nascimento,
+        'endereco': endereco
+    }
+    usuarios.append(novo_usuario)
+    return novo_usuario
+
+def criar_usuario_ui(usuarios):
+    cpf = input("\nInforme o CPF (somente números)\n=> ")
+
+    if buscar_usuario(usuarios, cpf=cpf):
+        print(ERRO_JA_EXISTE_USUARIO)
+        return
+
+    nome = input("\nInforme o nome completo\n=> ")
+    data_nascimento = input("\nInforme a data de nascimento (dd/mm/aaaa)\n=> ")
+    endereco = input("\nInforme o endereço (logradouro, número - bairro - cidade/sigla estado)\n=> ")
+    usuario = criar_usuario(usuarios, cpf=cpf, nome=nome, data_nascimento=data_nascimento, endereco=endereco)
+    print("\n" + MSG_USUARIO_CRIADO)
+
+def listar_usuarios(usuarios):
+    if len(usuarios) == 0:
+        print("\nSem usuários.")
+        return
+
+    extrato_usuarios = []
+    max_largura = 0
+    for usuario in usuarios:
+        extrato_usuario = textwrap.dedent(f"""\
+            Nome: {usuario['nome']}
+            CPF: {usuario['cpf']}
+            Data de Nasc.: {usuario['data_nascimento']}
+            Endereço: {usuario['endereco']}""")
+        extrato_usuarios.append(extrato_usuario)
+        max_largura = max(max(len(linha) for linha in extrato_usuario.splitlines()), max_largura)
+    print()
+    for extrato_usuario in extrato_usuarios:
+        print("=" * max_largura)
+        print(extrato_usuario)
+
+def administrar_usuarios(usuarios):
+    menu = """
+    ======= MENU USUÁRIOS =========
+    [c] Criar usuário
+    [l] Listar usuários
+    [q] Sair
+
+    => """
+
+    while True:
+
+        opcao = input(textwrap.dedent(menu))
+
+        if opcao == "c":
+            criar_usuario_ui(usuarios)
+
+        elif opcao == "l":
+            listar_usuarios(usuarios)
+
+        elif opcao == "q":
+            break
+
+        else:
+            print(ERRO_OPERACAO_INVALIDA)
+
+def administrar_contas():
+    menu = """
+    ======== MENU CONTAS ==========
+    [c] Criar conta
+    [l] Listar contas
+    [q] Sair
+
+    => """
+
+    while True:
+
+        opcao = input(textwrap.dedent(menu))
+
+        if opcao == "c":
+            pass
+
+        elif opcao == "l":
+            pass
+
+        elif opcao == "q":
+            break
+
+        else:
+            print(ERRO_OPERACAO_INVALIDA)
+
+def acessar_conta():
+    menu = """
+    ===== MENU CONTA-CORRENTE =====
     [d] Depositar
     [s] Sacar
     [e] Extrato
@@ -143,10 +250,10 @@ def main():
 
     while True:
 
-        opcao = input(menu)
+        opcao = input(textwrap.dedent(menu))
 
         if opcao == "d":
-            valor = float(input("\n\nInforme valor a depositar\n=> "))
+            valor = float(input("\nInforme valor a depositar\n=> "))
             saldo, linha_extrato = depositar(valor, saldo)
             extrato += linha_extrato
 
@@ -154,7 +261,7 @@ def main():
             if excedeu_quantidade_saques(numero_saques):
                 continue
 
-            valor = float(input("\n\nInforme valor a sacar\n=> "))
+            valor = float(input("\nInforme valor a sacar\n=> "))
             saldo, numero_saques, linha_extrato = sacar(valor=valor, saldo=saldo, numero_saques=numero_saques)
             extrato += linha_extrato
 
@@ -165,7 +272,38 @@ def main():
             break
 
         else:
-            print("Operação inválida, por favor selecione novamente a operação desejada.")
+            print(ERRO_OPERACAO_INVALIDA)
+
+def main():
+    menu = """
+    ======= MENU PRINCIPAL ========
+    [a] Acessar Conta-Corrente
+    [u] Administrar Usuários
+    [c] Administrar Contas-Corrente
+    [q] Sair
+
+    => """
+    usuarios = []
+    contas = []
+
+    while True:
+
+        opcao = input(textwrap.dedent(menu))
+
+        if opcao == "a":
+            acessar_conta()
+
+        elif opcao == "u":
+            administrar_usuarios(usuarios)
+
+        elif opcao == "c":
+            administrar_contas()
+
+        elif opcao == "q":
+            break
+
+        else:
+            print(ERRO_OPERACAO_INVALIDA)
 
 if __name__ == '__main__':
     main()
