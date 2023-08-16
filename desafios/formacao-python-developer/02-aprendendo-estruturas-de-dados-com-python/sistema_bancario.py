@@ -75,6 +75,7 @@ número do CPF informado para cada usuário da lista.
 
 import textwrap
 
+AGENCIA = "0001"
 MOEDA = "R$"
 LIMITE_VALOR_SAQUE = 500
 LIMITE_QUANTIDADE_SAQUES = 3

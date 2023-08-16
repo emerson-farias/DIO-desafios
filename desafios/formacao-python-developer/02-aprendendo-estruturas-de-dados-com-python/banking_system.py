@@ -60,17 +60,22 @@ Only the numbers of the SSN should be stored. We cannot register 2 users with
 the same SSN.
 
 Create Checking Account
-The program should store accounts in a list, an account consists of: agency,
-account number and user. The account number is sequential, starting at 1. The
-agency number is fixed: "0001". The user can have more than one account, but an
-account belongs to only one user.
+-----------------------
+
+The program should store accounts in a list, an account consists of: branch
+number, account number and user. The account number is sequential, starting at
+1. The branch number is fixed: "0001". The user can have more than one account,
+but an account belongs to only one user.
 
 Tip
-To link a user to an account, filter the user list by looking for the SSN 
-number reported for each user in the list.
+---
+
+To link a user to an account, filter the user list by looking for the SSN number
+reported for each user in the list.
 """
 import textwrap
 
+BRANCH = "0001"
 CURRENCY = "USD"
 WITHDRAWAL_LIMIT_AMOUNT = 500
 WITHDRAWAL_LIMIT_COUNT = 3
