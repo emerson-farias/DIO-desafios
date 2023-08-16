@@ -85,7 +85,9 @@ STATEMENT_HEADER = "Statement".center(STATEMENT_WIDTH, "=")
 SEPARATOR_LINE_BALANCE = "-" * STATEMENT_WIDTH
 ERROR_USER_ALREADY_EXISTS = "ERROR: A user with this SSN already exists."
 ERROR_INVALID_OPERATION = "ERROR: Invalid operation, please select the desired operation again."
+ERROR_USER_NOT_FOUND = "ERROR: User not found."
 MSG_USER_CREATED = "User created successfully."
+MSG_ACCOUNT_CREATED = "Account created successfully."
 
 # ##############################################################################
 # ▒█░▒█ █▀▀ █▀▀ █▀▀█ █▀▀ 
@@ -176,7 +178,59 @@ def manage_users(users):
 # ▒█░▒█ ▀▀▀ ▀▀▀ ▀▀▀▀ ░▀▀▀ ▀░░▀ ░░▀░░ ▀▀▀
 # ##############################################################################
 
-def manage_accounts():
+def list_accounts(accounts, *, number=None):
+    if len(accounts) == 0:
+        print("\nNo accounts.")
+        return
+
+    accounts_listing = []
+    max_width = 0
+    for account in accounts:
+        describe = True
+        if number:
+            describe = account['number'] == number
+        if describe:
+            account_description = textwrap.dedent(f"""\
+                Branch: {account['branch']}
+                Account: {account['number']}
+                Holder: {account['holder']['name']} - {account['holder']['ssn']}""")
+            accounts_listing.append(account_description)
+            max_width = max(max(len(linha) for linha in account_description.splitlines()), max_width)
+    if len(accounts_listing) == 0:
+        return
+
+    print()
+    for account_description in accounts_listing:
+        if len(accounts_listing) > 1:
+            print("=" * max_width)
+        print(account_description)
+
+def create_account(users, accounts, *, branch, holder_ssn):
+    holder = search_user(users, ssn=holder_ssn)
+    if holder is None:
+        raise ValueError(ERROR_USER_NOT_FOUND)
+
+    account_number = len(accounts) + 1
+    new_account = {
+        'branch': branch,
+        'number': account_number,
+        'holder': holder
+    }
+    accounts.append(new_account)
+    return new_account
+
+def create_account_ui(users, accounts):
+    holder_ssn = input("\nEnter the account holder's SSN (numbers only)\n=> ")
+
+    if search_user(users, ssn=holder_ssn) is None:
+        print(ERROR_USER_NOT_FOUND)
+        return
+
+    account = create_account(users, accounts, branch=BRANCH, holder_ssn=holder_ssn)
+    print("\n" + MSG_ACCOUNT_CREATED + ":")
+    list_accounts(accounts, number=account['number'])
+
+def manage_accounts(users, accounts):
     menu = """
     ======= ACCOUNTS MENU =======
     [c] Create account
@@ -190,10 +244,10 @@ def manage_accounts():
         option = input(textwrap.dedent(menu))
 
         if option == "c":
-            pass
+            create_account_ui(users, accounts)
 
         elif option == "l":
-            pass
+            list_accounts(accounts)
 
         elif option == "q":
             break
@@ -324,7 +378,7 @@ def main():
             manage_users(users)
 
         elif option == "c":
-            manage_accounts()
+            manage_accounts(users, accounts)
 
         elif option == "q":
             break

@@ -84,7 +84,9 @@ BARRA_EXTRATO = "Extrato".center(LARGURA_EXTRATO, "=")
 BARRA_SEPARADORA_SALDO = "-" * LARGURA_EXTRATO
 ERRO_JA_EXISTE_USUARIO = "ERRO: Já existe um usuário com este CPF."
 ERRO_OPERACAO_INVALIDA = "ERRO: Operação inválida, por favor selecione novamente a operação desejada."
+ERRO_USUARIO_NAO_ENCONTRADO = "ERRO: Usuário não encontrado."
 MSG_USUARIO_CRIADO = "Usuário criado com sucesso."
+MSG_CONTA_CRIADA = "Conta criada com sucesso"
 
 # ##############################################################################
 # ▒█░▒█ █▀▀ █░░█ █▀▀█ █▀▀█ ░▀░ █▀▀█ █▀▀ 
@@ -175,7 +177,59 @@ def administrar_usuarios(usuarios):
 # ▒█▄▄█ ▀▀▀▀ ▀░░▀ ░░▀░░ ▀░░▀ ▀▀▀ 
 # ##############################################################################
 
-def administrar_contas():
+def listar_contas(contas, *, numero=None):
+    if len(contas) == 0:
+        print("\nSem contas.")
+        return
+
+    listagem_contas = []
+    max_largura = 0
+    for conta in contas:
+        descrever = True
+        if numero:
+            descrever = conta['numero'] == numero
+        if descrever:
+            descricao_conta = textwrap.dedent(f"""\
+                Agência: {conta['agencia']}
+                Conta: {conta['numero']}
+                Titular: {conta['titular']['nome']} - {conta['titular']['cpf']}""")
+            listagem_contas.append(descricao_conta)
+            max_largura = max(max(len(linha) for linha in descricao_conta.splitlines()), max_largura)
+    if len(listagem_contas) == 0:
+        return
+
+    print()
+    for descricao_conta in listagem_contas:
+        if len(listagem_contas) > 1:
+            print("=" * max_largura)
+        print(descricao_conta)
+
+def criar_conta(usuarios, contas, *, agencia, cpf_titular):
+    titular = buscar_usuario(usuarios, cpf=cpf_titular)
+    if titular is None:
+        raise ValueError(ERRO_USUARIO_NAO_ENCONTRADO)
+
+    numero_conta = len(contas) + 1
+    nova_conta = {
+        'agencia': agencia,
+        'numero': numero_conta,
+        'titular': titular
+    }
+    contas.append(nova_conta)
+    return nova_conta
+
+def criar_conta_ui(usuarios, contas):
+    cpf_titular = input("\nInforme o CPF do titular da conta (somente números)\n=> ")
+
+    if buscar_usuario(usuarios, cpf=cpf_titular) is None:
+        print(ERRO_USUARIO_NAO_ENCONTRADO)
+        return
+
+    conta = criar_conta(usuarios, contas, agencia=AGENCIA, cpf_titular=cpf_titular)
+    print("\n" + MSG_CONTA_CRIADA + ":")
+    listar_contas(contas, numero=conta['numero'])
+
+def administrar_contas(usuarios, contas):
     menu = """
     ======== MENU CONTAS ==========
     [c] Criar conta
@@ -189,10 +243,10 @@ def administrar_contas():
         opcao = input(textwrap.dedent(menu))
 
         if opcao == "c":
-            pass
+            criar_conta_ui(usuarios, contas)
 
         elif opcao == "l":
-            pass
+            listar_contas(contas)
 
         elif opcao == "q":
             break
@@ -322,7 +376,7 @@ def main():
             administrar_usuarios(usuarios)
 
         elif opcao == "c":
-            administrar_contas()
+            administrar_contas(usuarios, contas)
 
         elif opcao == "q":
             break
