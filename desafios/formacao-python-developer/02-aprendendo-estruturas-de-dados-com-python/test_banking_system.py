@@ -37,6 +37,58 @@ class BankingSystemUnitTest(unittest.TestCase):
         self.assertEqual(str(context.exception), ERROR_USER_ALREADY_EXISTS)
 
 # ##############################################################################
+# ░█▀▀█ █▀▀ █▀▀ █▀▀█ █░░█ █▀▀▄ ▀▀█▀▀ █▀▀ 
+# ▒█▄▄█ █░░ █░░ █░░█ █░░█ █░░█ ░░█░░ ▀▀█ 
+# ▒█░▒█ ▀▀▀ ▀▀▀ ▀▀▀▀ ░▀▀▀ ▀░░▀ ░░▀░░ ▀▀▀
+# ##############################################################################
+
+    def test_list_accounts_empty(self):
+        accounts = []
+        with patch('sys.stdout', new_callable=StringIO) as mock_output:
+            list_accounts(accounts)
+            self.assertIn("No accounts.", mock_output.getvalue())
+
+    def test_list_accounts_without_number(self):
+        accounts = [
+            {'branch': BRANCH, 'number': 1, 'holder': {'name': 'John', 'ssn': '123456789'}},
+            {'branch': BRANCH, 'number': 2, 'holder': {'name': 'Jane', 'ssn': '987654321'}}
+        ]
+        with patch('sys.stdout', new_callable=StringIO) as mock_output:
+            list_accounts(accounts)
+            self.assertIn("Branch: " + BRANCH, mock_output.getvalue())
+            self.assertIn("Account: 1", mock_output.getvalue())
+            self.assertIn("Holder: John - 123456789", mock_output.getvalue())
+            self.assertIn("Account: 2", mock_output.getvalue())
+            self.assertIn("Holder: Jane - 987654321", mock_output.getvalue())
+
+    def test_list_accounts_with_number(self):
+        accounts = [
+            {'branch': BRANCH, 'number': 1, 'holder': {'name': 'John', 'ssn': '123456789'}},
+            {'branch': BRANCH, 'number': 2, 'holder': {'name': 'Jane', 'ssn': '987654321'}}
+        ]
+        with patch('sys.stdout', new_callable=StringIO) as mock_output:
+            list_accounts(accounts, number=2)
+            self.assertNotIn("Account: 1", mock_output.getvalue())
+            self.assertIn("Account: 2", mock_output.getvalue())
+            self.assertIn("Holder: Jane - 987654321", mock_output.getvalue())
+
+    def test_create_account_with_existing_holder(self):
+        users = [{'name': 'John', 'ssn': '123456789'}]
+        accounts = []
+        new_account = create_account(users, accounts, branch=BRANCH, holder_ssn='123456789')
+        self.assertEqual(new_account['branch'], BRANCH)
+        self.assertEqual(new_account['number'], 1)
+        self.assertEqual(new_account['holder']['name'], 'John')
+        self.assertEqual(new_account['holder']['ssn'], '123456789')
+
+    def test_create_account_with_nonexistent_holder(self):
+        users = [{'name': 'John', 'ssn': '123456789'}]
+        accounts = []
+        with self.assertRaises(ValueError) as context:
+            create_account(users, accounts, branch=BRANCH, holder_ssn='987654321')
+        self.assertEqual(str(context.exception), ERROR_USER_NOT_FOUND)
+
+# ##############################################################################
 # ▒█▀▀█ █░░█ █▀▀ █▀▀ █░█ ░▀░ █▀▀▄ █▀▀▀ 　 ░█▀▀█ █▀▀ █▀▀ █▀▀█ █░░█ █▀▀▄ ▀▀█▀▀ 
 # ▒█░░░ █▀▀█ █▀▀ █░░ █▀▄ ▀█▀ █░░█ █░▀█ 　 ▒█▄▄█ █░░ █░░ █░░█ █░░█ █░░█ ░░█░░ 
 # ▒█▄▄█ ▀░░▀ ▀▀▀ ▀▀▀ ▀░▀ ▀▀▀ ▀░░▀ ▀▀▀▀ 　 ▒█░▒█ ▀▀▀ ▀▀▀ ▀▀▀▀ ░▀▀▀ ▀░░▀ ░░▀░░
@@ -147,13 +199,13 @@ class BankingSystemIntegrationTest(unittest.TestCase):
 
     @patch('builtins.input', side_effect=['u', 'c', '123456789', 'John', '11/01/2000', '123 Pine St', 'q', 'q'])
     @patch('sys.stdout', new_callable=StringIO)
-    def test01_administrar_usuarios_criar_usuario(self, mock_output, mock_input):
+    def test01_manage_users_create_users(self, mock_output, mock_input):
         main()
         self.assertIn(MSG_USER_CREATED, mock_output.getvalue())
 
     @patch('builtins.input', side_effect=['u', 'c', '12345678901', 'John', '11/01/2000', '123 Pine St', 'l', 'q', 'q'])
     @patch('sys.stdout', new_callable=StringIO)
-    def test02_administrar_usuarios_listar_usuarios(self, mock_output, mock_input):
+    def test02_manage_users_list_users(self, mock_output, mock_input):
         main()
         self.assertIn("12345678901", mock_output.getvalue())
         self.assertIn("John", mock_output.getvalue())
@@ -162,9 +214,32 @@ class BankingSystemIntegrationTest(unittest.TestCase):
 
     @patch('builtins.input', side_effect=['u', 'c', '123456789', 'John', '11/01/2000', '123 Pine St', 'c', '123456789', 'q', 'q'])
     @patch('sys.stdout', new_callable=StringIO)
-    def test03_administrar_usuarios_criar_usuario_existente(self, mock_output, mock_input):
+    def test03_manage_users_create_user_already_exists(self, mock_output, mock_input):
         main()
         self.assertIn(ERROR_USER_ALREADY_EXISTS, mock_output.getvalue())
+
+# ##############################################################################
+# ░█▀▀█ █▀▀ █▀▀ █▀▀█ █░░█ █▀▀▄ ▀▀█▀▀ █▀▀ 
+# ▒█▄▄█ █░░ █░░ █░░█ █░░█ █░░█ ░░█░░ ▀▀█ 
+# ▒█░▒█ ▀▀▀ ▀▀▀ ▀▀▀▀ ░▀▀▀ ▀░░▀ ░░▀░░ ▀▀▀
+# ##############################################################################
+
+    @patch('builtins.input', side_effect=['c', 'c', '123456789', 'q', 'q'])
+    @patch('sys.stdout', new_callable=StringIO)
+    def test04_manage_accounts_create_account_user_not_found(self, mock_output, mock_input):
+        main()
+        self.assertIn(ERROR_USER_NOT_FOUND, mock_output.getvalue())
+
+    @patch('builtins.input', side_effect=['u', 'c', '123456789', 'John', '11/01/2000', 'Rua A, 123', 'q', 'c', 'c', '123456789', 'q', 'q'])
+    @patch('sys.stdout', new_callable=StringIO)
+    def test05_manage_accounts_create_account(self, mock_output, mock_input):
+        main()
+        self.assertIn(MSG_USER_CREATED, mock_output.getvalue())
+        self.assertIn(MSG_ACCOUNT_CREATED, mock_output.getvalue())
+        self.assertIn("Branch: " + BRANCH, mock_output.getvalue())
+        self.assertIn("Account: 1", mock_output.getvalue())
+        self.assertIn("Holder: John - 123456789", mock_output.getvalue())
+
 
 # ##############################################################################
 # ▒█▀▀█ █░░█ █▀▀ █▀▀ █░█ ░▀░ █▀▀▄ █▀▀▀ 　 ░█▀▀█ █▀▀ █▀▀ █▀▀█ █░░█ █▀▀▄ ▀▀█▀▀ 
@@ -174,14 +249,14 @@ class BankingSystemIntegrationTest(unittest.TestCase):
 
     @patch('builtins.input', side_effect=['a', 'd', '200', 's', 'q', 'q'])
     @patch('sys.stdout', new_callable=StringIO)
-    def test04_deposit(self, mock_output, mock_input):
+    def test06_deposit(self, mock_output, mock_input):
         main()
         self.assertIn("Deposit     -     200.00 USD", mock_output.getvalue())
         self.assertIn("Net Balance -     200.00 USD", mock_output.getvalue())
 
     @patch('builtins.input', side_effect=['a', 'd', '200', 'w', '200', 's', 'q', 'q'])
     @patch('sys.stdout', new_callable=StringIO)
-    def test05_withdraw(self, mock_output, mock_input):
+    def test07_withdraw(self, mock_output, mock_input):
         main()
         self.assertIn("Deposit     -     200.00 USD", mock_output.getvalue())
         self.assertIn("Withdraw    -    -200.00 USD", mock_output.getvalue())
@@ -189,7 +264,7 @@ class BankingSystemIntegrationTest(unittest.TestCase):
 
     @patch('builtins.input', side_effect=['a', 'd', '600', 'w', f'{WITHDRAWAL_LIMIT_AMOUNT + 50.0}', 'w', '100', 'w', '200', 'w', '305', 'w', '295', 'w', 's', 'q', 'q'])
     @patch('sys.stdout', new_callable=StringIO)
-    def test06_withdraws(self, mock_output, mock_input):
+    def test08_withdraws(self, mock_output, mock_input):
         main()
         self.assertIn("Deposit     -     600.00 USD", mock_output.getvalue())
         self.assertIn("ERROR: Amount exceeds allowed withdrawal limit", mock_output.getvalue())

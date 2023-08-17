@@ -360,7 +360,7 @@ def main():
     ========= MAIN MENU =========
     [a] Access Checking Account
     [u] Manage Users
-    [c] Manage Checking Accounts
+    [c] Manage Accounts
     [q] Quit
 
     => """

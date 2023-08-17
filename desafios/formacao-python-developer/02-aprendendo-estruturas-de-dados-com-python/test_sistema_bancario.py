@@ -37,6 +37,58 @@ class UnitTestSistemaBancario(unittest.TestCase):
         self.assertEqual(str(context.exception), ERRO_JA_EXISTE_USUARIO)
 
 # ##############################################################################
+# ▒█▀▀█ █▀▀█ █▀▀▄ ▀▀█▀▀ █▀▀█ █▀▀ 
+# ▒█░░░ █░░█ █░░█ ░░█░░ █▄▄█ ▀▀█ 
+# ▒█▄▄█ ▀▀▀▀ ▀░░▀ ░░▀░░ ▀░░▀ ▀▀▀ 
+# ##############################################################################
+
+    def test_listar_contas_vazia(self):
+        contas = []
+        with patch('sys.stdout', new_callable=StringIO) as mock_output:
+            listar_contas(contas)
+            self.assertIn("Sem contas.", mock_output.getvalue())
+
+    def test_listar_contas_sem_numero(self):
+        contas = [
+            {'agencia': AGENCIA, 'numero': 1, 'titular': {'nome': 'João', 'cpf': '12345678901'}},
+            {'agencia': AGENCIA, 'numero': 2, 'titular': {'nome': 'Maria', 'cpf': '98765432109'}}
+        ]
+        with patch('sys.stdout', new_callable=StringIO) as mock_output:
+            listar_contas(contas)
+            self.assertIn("Agência: " + AGENCIA, mock_output.getvalue())
+            self.assertIn("Conta: 1", mock_output.getvalue())
+            self.assertIn("Titular: João - 12345678901", mock_output.getvalue())
+            self.assertIn("Conta: 2", mock_output.getvalue())
+            self.assertIn("Titular: Maria - 98765432109", mock_output.getvalue())
+
+    def test_listar_contas_com_numero(self):
+        contas = [
+            {'agencia': AGENCIA, 'numero': 1, 'titular': {'nome': 'João', 'cpf': '12345678901'}},
+            {'agencia': AGENCIA, 'numero': 2, 'titular': {'nome': 'Maria', 'cpf': '98765432109'}}
+        ]
+        with patch('sys.stdout', new_callable=StringIO) as mock_output:
+            listar_contas(contas, numero=2)
+            self.assertNotIn("Conta: 1", mock_output.getvalue())
+            self.assertIn("Conta: 2", mock_output.getvalue())
+            self.assertIn("Titular: Maria - 98765432109", mock_output.getvalue())
+
+    def test_criar_conta_com_titular_existente(self):
+        usuarios = [{'nome': 'João', 'cpf': '12345678901'}]
+        contas = []
+        nova_conta = criar_conta(usuarios, contas, agencia=AGENCIA, cpf_titular='12345678901')
+        self.assertEqual(nova_conta['agencia'], AGENCIA)
+        self.assertEqual(nova_conta['numero'], 1)
+        self.assertEqual(nova_conta['titular']['nome'], 'João')
+        self.assertEqual(nova_conta['titular']['cpf'], '12345678901')
+
+    def test_criar_conta_com_titular_inexistente(self):
+        usuarios = [{'nome': 'João', 'cpf': '12345678901'}]
+        contas = []
+        with self.assertRaises(ValueError) as context:
+            criar_conta(usuarios, contas, agencia=AGENCIA, cpf_titular='98765432109')
+        self.assertEqual(str(context.exception), ERRO_USUARIO_NAO_ENCONTRADO)
+
+# ##############################################################################
 # ▒█▀▀█ █▀▀█ █▀▀▄ ▀▀█▀▀ █▀▀█ ░░ ▒█▀▀█ █▀▀█ █▀▀█ █▀▀█ █▀▀ █▀▀▄ ▀▀█▀▀ █▀▀ 
 # ▒█░░░ █░░█ █░░█ ░░█░░ █▄▄█ ▀▀ ▒█░░░ █░░█ █▄▄▀ █▄▄▀ █▀▀ █░░█ ░░█░░ █▀▀ 
 # ▒█▄▄█ ▀▀▀▀ ▀░░▀ ░░▀░░ ▀░░▀ ░░ ▒█▄▄█ ▀▀▀▀ ▀░▀▀ ▀░▀▀ ▀▀▀ ▀░░▀ ░░▀░░ ▀▀▀
@@ -145,26 +197,48 @@ class IntegrationTestSistemaBancario(unittest.TestCase):
 # ░▀▄▄▀ ▀▀▀ ░▀▀▀ ▀░░▀ ▀░▀▀ ▀▀▀ ▀▀▀▀ ▀▀▀ 
 # ##############################################################################
 
-    @patch('builtins.input', side_effect=['u', 'c', '12345678901', 'João', '01/01/2000', 'Rua A, 123', 'q', 'q'])
+    @patch('builtins.input', side_effect=['u', 'c', '12345678901', 'João', '01/11/2000', 'Rua A, 123', 'q', 'q'])
     @patch('sys.stdout', new_callable=StringIO)
     def test01_administrar_usuarios_criar_usuario(self, mock_output, mock_input):
         main()
         self.assertIn(MSG_USUARIO_CRIADO, mock_output.getvalue())
 
-    @patch('builtins.input', side_effect=['u', 'c', '12345678901', 'João', '01/01/2000', 'Rua A, 123', 'l', 'q', 'q'])
+    @patch('builtins.input', side_effect=['u', 'c', '12345678901', 'João', '01/11/2000', 'Rua A, 123', 'l', 'q', 'q'])
     @patch('sys.stdout', new_callable=StringIO)
     def test02_administrar_usuarios_listar_usuarios(self, mock_output, mock_input):
         main()
         self.assertIn("12345678901", mock_output.getvalue())
         self.assertIn("João", mock_output.getvalue())
-        self.assertIn("01/01/2000", mock_output.getvalue())
+        self.assertIn("01/11/2000", mock_output.getvalue())
         self.assertIn("Rua A, 123", mock_output.getvalue())    
 
-    @patch('builtins.input', side_effect=['u', 'c', '12345678901', 'João', '01/01/2000', 'Rua A, 123', 'c', '12345678901', 'Jane Smith', '02/02/2002', '456 Elm St', 'q', 'q'])
+    @patch('builtins.input', side_effect=['u', 'c', '12345678901', 'João', '01/11/2000', 'Rua A, 123', 'c', '12345678901', 'Jane Smith', '02/02/2002', '456 Elm St', 'q', 'q'])
     @patch('sys.stdout', new_callable=StringIO)
     def test03_administrar_usuarios_criar_usuario_existente(self, mock_output, mock_input):
         main()
         self.assertIn(ERRO_JA_EXISTE_USUARIO, mock_output.getvalue())
+
+# ##############################################################################
+# ▒█▀▀█ █▀▀█ █▀▀▄ ▀▀█▀▀ █▀▀█ █▀▀ 
+# ▒█░░░ █░░█ █░░█ ░░█░░ █▄▄█ ▀▀█ 
+# ▒█▄▄█ ▀▀▀▀ ▀░░▀ ░░▀░░ ▀░░▀ ▀▀▀ 
+# ##############################################################################
+
+    @patch('builtins.input', side_effect=['c', 'c', '12345678901', 'q', 'q'])
+    @patch('sys.stdout', new_callable=StringIO)
+    def test04_administrar_contas_criar_conta_usuario_nao_encontrado(self, mock_output, mock_input):
+        main()
+        self.assertIn(ERRO_USUARIO_NAO_ENCONTRADO, mock_output.getvalue())
+
+    @patch('builtins.input', side_effect=['u', 'c', '12345678901', 'João', '01/11/2000', 'Rua A, 123', 'q', 'c', 'c', '12345678901', 'q', 'q'])
+    @patch('sys.stdout', new_callable=StringIO)
+    def test05_administrar_contas_criar_conta(self, mock_output, mock_input):
+        main()
+        self.assertIn(MSG_USUARIO_CRIADO, mock_output.getvalue())
+        self.assertIn(MSG_CONTA_CRIADA, mock_output.getvalue())
+        self.assertIn("Agência: " + AGENCIA, mock_output.getvalue())
+        self.assertIn("Conta: 1", mock_output.getvalue())
+        self.assertIn("Titular: João - 12345678901", mock_output.getvalue())
 
 # ##############################################################################
 # ▒█▀▀█ █▀▀█ █▀▀▄ ▀▀█▀▀ █▀▀█ ░░ ▒█▀▀█ █▀▀█ █▀▀█ █▀▀█ █▀▀ █▀▀▄ ▀▀█▀▀ █▀▀ 
@@ -174,21 +248,21 @@ class IntegrationTestSistemaBancario(unittest.TestCase):
 
     @patch('builtins.input', side_effect=['a', 'd', '200', 'e', 'q', 'q'])
     @patch('sys.stdout', new_callable=StringIO)
-    def test04_depositar(self, mock_output, mock_input):
+    def test06_depositar(self, mock_output, mock_input):
         main()
         self.assertIn("Depósito - R$     200.00 C", mock_output.getvalue())
         self.assertIn("Saldo    - R$     200.00", mock_output.getvalue())
 
     @patch('builtins.input', side_effect=['a', 'd', '200', 's', '200', 'e', 'q', 'q'])
     @patch('sys.stdout', new_callable=StringIO)
-    def test05_saque(self, mock_output, mock_input):
+    def test07_saque(self, mock_output, mock_input):
         main()
         self.assertIn("Saque    - R$     200.00 D", mock_output.getvalue())
         self.assertIn("Saldo    - R$       0.00", mock_output.getvalue())
 
     @patch('builtins.input', side_effect=['a', 'd', '600', 's', f'{LIMITE_VALOR_SAQUE + 50.0}', 's', '100', 's', '200', 's', '305', 's', '295', 's', 'e', 'q', 'q'])
     @patch('sys.stdout', new_callable=StringIO)
-    def test06_saques(self, mock_output, mock_input):
+    def test08_saques(self, mock_output, mock_input):
         main()
         self.assertIn("Depósito - R$     600.00 C", mock_output.getvalue())
         self.assertIn("ERRO: Valor maior que limite de saque permitido", mock_output.getvalue())
